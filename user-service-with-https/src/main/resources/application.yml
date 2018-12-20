@@ -1,0 +1,8 @@
+server:
+  port: 8751
+  ssl:
+    key-store: classpath:keystore.p12
+    key-store-password: 666666
+    key-store-type: PKCS12
+    key-alias: tomcat
+#user-service-path: http://localhost:8750

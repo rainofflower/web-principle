@@ -1,0 +1,4 @@
+server:
+  port: 8760
+  
+user-service-path: http://localhost:8750

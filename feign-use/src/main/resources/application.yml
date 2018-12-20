@@ -1,0 +1,6 @@
+server:
+  port: 8770
+
+service-path:
+  user-service: http://localhost:8750
+  user-service-with-https: https://localhost:8751
