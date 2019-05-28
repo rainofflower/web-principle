@@ -16,6 +16,7 @@
 		<module>user-service-with-https</module>
         <module>webclient-use</module>
         <module>http-request-old-version</module>
+        <module>original-socket</module>
     </modules>
 	
     <properties>

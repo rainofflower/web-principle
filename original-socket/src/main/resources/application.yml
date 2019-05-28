@@ -1,0 +1,9 @@
+thread:
+  pool:
+    corePoolSize: 2
+    maxPoolSize: 7
+    queueCapacity: 20
+    keepAliveSecond: 200
+
+server:
+  port: 8080
