@@ -1,7 +1,5 @@
 package com.yanghui.study.server.handler;
 
-import com.yanghui.study.server.handler.DataHandler;
-
 import java.net.Socket;
 
 public abstract class AbstractDefaultDataHandler implements DataHandler {
@@ -10,9 +8,11 @@ public abstract class AbstractDefaultDataHandler implements DataHandler {
         try{
             process(socket);
         }finally {
-            socket.close();
+            if(socket != null){
+                socket.close();
+            }
         }
     }
 
-    abstract void process(Socket socket) throws Exception;
+    protected abstract void process(Socket socket) throws Exception;
 }

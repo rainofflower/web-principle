@@ -3,6 +3,7 @@ package com.yanghui.study.server;
 import com.yanghui.study.server.handler.DataHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -24,6 +25,7 @@ public class Server implements ApplicationRunner {
     private Executor threadPool;
 
     @Autowired
+    @Qualifier("httpRequestHandler")
     private DataHandler handler;
 
     public void run(ApplicationArguments args) throws Exception{
@@ -40,12 +42,8 @@ public class Server implements ApplicationRunner {
                 });
             }
         } finally {
-            try {
-                if(listener != null){
-                    listener.close();
-                }
-            } catch (IOException e) {
-                log.error("端口监听关闭异常："+e);
+            if(listener != null){
+                listener.close();
             }
         }
     }
