@@ -17,6 +17,7 @@
         <module>webclient-use</module>
         <module>http-request-old-version</module>
         <module>original-socket</module>
+        <module>common</module>
     </modules>
 	
     <properties>

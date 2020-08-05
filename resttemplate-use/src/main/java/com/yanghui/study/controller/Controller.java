@@ -4,6 +4,13 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.yanghui.study.entity.User;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +36,9 @@ public class Controller {
 	
 	@Value("${user-service-path}")
 	private String url;
+
+	@Autowired
+	private HttpClientConnectionManager connectionManager;
 
 	@GetMapping("/rest-request")
 	public String restRequest(){
@@ -65,5 +76,27 @@ public class Controller {
 			}
 		}
 		return responseDataStr;
+	}
+
+	@GetMapping("/rest-request2")
+	public String restRequest2(){
+		try {
+			CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(connectionManager).build();
+			StringBuilder sb = new StringBuilder();
+			sb.append("appno=123");
+			HttpGet httpMethod = new HttpGet(url + "/httpClient" + "?" + sb.toString());
+			HttpResponse httpResponse = httpClient.execute(httpMethod);
+			String s = EntityUtils.toString(httpResponse.getEntity());
+			return s;
+		}catch (IOException e){
+
+		}
+		return null;
+	}
+
+	@GetMapping("/rest-request3")
+	public String restRequest3(){
+		String s = restTemplate.getForObject(url + "/httpClient?appno=123", String.class);
+		return s;
 	}
 }
