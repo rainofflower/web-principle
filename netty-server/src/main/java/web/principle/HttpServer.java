@@ -32,7 +32,7 @@ public class HttpServer {
                     //BACKLOG用于构造服务端套接字ServerSocket对象，标识当服务器请求处理线程全满时，用于临时存放已完成三次握手的请求的队列的最大长度。如果未设置或所设置的值小于1，Java将使用默认值50。
                     //Option是为了NioServerSocketChannel设置的，用来接收传入连接的
                     .option(ChannelOption.SO_BACKLOG, 128)
-                    //设置父ServerChannel接收到的子channel支持keep-alive
+                    //是否启用心跳保活机制。在双方TCP套接字建立连接后（即都进入ESTABLISHED状态）并且在两个小时左右上层没有任何数据传输的情况下，这套机制才会被激活
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
                     //.handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ChannelInitializer<SocketChannel>() {

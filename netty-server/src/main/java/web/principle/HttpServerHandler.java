@@ -28,6 +28,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpReque
         HttpVersion httpVersion = request.protocolVersion();
         HttpHeaders headers = request.headers();
         ByteBuf content = request.content();
+        //回显原始请求报文
         StringBuilder sb = new StringBuilder();
         sb.append(method.name()).append(" ").append(uri).append(" ").append(httpVersion.text()).append("\n");
         Iterator<Map.Entry<String, String>> iterator = headers.iteratorAsString();
@@ -54,7 +55,6 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpReque
         //设置头信息
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8");
         response.headers().set(HttpHeaderNames.CONTENT_LENGTH,byteBuf.readableBytes());
-        //response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
         //响应客户端
         ctx.write(response);
     }
