@@ -10,14 +10,15 @@
     <version>1.0-SNAPSHOT</version>
 
 	<modules>
-		<module>resttemplate-use</module>
+		<module>resttemplate-client</module>
 		<module>user-service</module>
-		<module>feign-use</module>
+		<module>feign-client</module>
 		<module>user-service-with-https</module>
-        <module>webclient-use</module>
+        <module>webclient</module>
         <module>http-request-old-version</module>
         <module>original-socket</module>
         <module>common</module>
+        <module>netty-server</module>
     </modules>
 	
     <properties>
