@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * @author YangHui
@@ -54,7 +55,19 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpReque
                 byteBuf);
         //设置头信息
         response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8");
+        /**
+         * 如果响应中不添加响应主体长度，每次请求都会建立新的TCP连接，服务端发送响应后会关闭当前连接（响应首部会添加 Connection: close）
+         */
         response.headers().set(HttpHeaderNames.CONTENT_LENGTH,byteBuf.readableBytes());
+        /**
+         * google chrome 会记录服务器返回的cookie,除非关闭chrome，否则访问相同服务器请求首部中会自动添加cookie
+         */
+        String cookie = headers.get(HttpHeaderNames.COOKIE);
+        if(cookie == null || cookie.length() == 0){
+            response.headers().set(HttpHeaderNames.SET_COOKIE,"uid="+ UUID.randomUUID().toString().replaceAll("-",""));
+        }else{
+            response.headers().set(HttpHeaderNames.SET_COOKIE,cookie);
+        }
         //响应客户端
         ctx.write(response);
     }
