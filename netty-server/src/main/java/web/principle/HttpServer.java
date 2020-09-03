@@ -25,6 +25,8 @@ public class HttpServer {
         EventLoopGroup bossGroup = new NioEventLoopGroup(BOSS_THREAD);
         EventLoopGroup workGroup = new NioEventLoopGroup();
         final HttpServerHandler httpServerHandler = new HttpServerHandler();
+        final BasicAuthenticationHandler authenticationHandler = new BasicAuthenticationHandler();
+        final ResponseHandler responseHandler = new ResponseHandler();
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
             bootstrap.group(bossGroup, workGroup)
@@ -48,14 +50,16 @@ public class HttpServer {
                                     //解决大数据包传输问题，用于支持异步写大量数据流并且不需要消耗大量内存也不会导致内存溢出错误( OutOfMemoryError )。
                                     //仅支持ChunkedInput类型的消息。也就是说，仅当消息类型是ChunkedInput时才能实现ChunkedWriteHandler提供的大数据包传输功能
                                     .addLast("http-chunked",new ChunkedWriteHandler())
-                                    .addLast("http-server-handler",httpServerHandler);
-                            log.info("\nchannel(id: {} ) has established",channel.id().asShortText());
+                                    .addLast("http-server-handler",httpServerHandler)
+                                    .addLast("basic-authentication-handler",authenticationHandler)
+                                    .addLast("response-handler",responseHandler);
+                            log.info("\nchannel( {} ) has established",channel);
                             //监听TCP连接断开
                             channel.closeFuture().addListener((f)->{
                                 if(f.isSuccess()){
-                                    log.info("\nchannel(id: {} ) has disconnected",channel.id().asShortText());
+                                    log.info("\nchannel( {} ) has disconnected",channel);
                                 }else{
-                                    log.info("\nchannel(id: {} ) closed failed",channel.id().asShortText());
+                                    log.info("\nchannel( {} ) closed failed",channel);
                                 }
                             });
                         }
