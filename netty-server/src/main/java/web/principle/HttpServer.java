@@ -6,6 +6,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
@@ -36,13 +37,16 @@ public class HttpServer {
                     .option(ChannelOption.SO_BACKLOG, 128)
                     //是否启用心跳保活机制。在双方TCP套接字建立连接后（即都进入ESTABLISHED状态）并且在两个小时左右上层没有任何数据传输的情况下，这套机制才会被激活
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
-                    //.handler(new LoggingHandler(LogLevel.INFO))
+                    .handler(new LoggingHandler(LogLevel.DEBUG))
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel channel) throws Exception {
                             ChannelPipeline pipeline = channel.pipeline();
-                            //服务端对request解码,对response编码
-                            pipeline.addLast("http-serverCodec", new HttpServerCodec())
+                            pipeline
+                                    //ssl层
+                                    .addLast(SSLContextHolder.serverSslCtx.newHandler(channel.alloc()))
+                                    //服务端对request解码,对response编码
+                                    .addLast("http-serverCodec", new HttpServerCodec())
                                     //keep-alive实现
                                     .addLast("http-KeepAlive", new HttpServerKeepAliveHandler())
                                     //将多个消息转换为单一的FullHttpRequest或FullHttpResponse对象

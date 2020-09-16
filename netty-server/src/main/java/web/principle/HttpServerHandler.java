@@ -5,8 +5,10 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.ssl.SslHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetAddress;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -52,6 +54,22 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         ctx.flush();
+    }
+
+    @Override
+    public void channelActive(final ChannelHandlerContext ctx) {
+        SslHandler sslHandler = ctx.pipeline().get(SslHandler.class);
+        if(sslHandler != null){
+            sslHandler.handshakeFuture().addListener((f)->{
+                    ctx.writeAndFlush(
+                            "ssl handshake" + InetAddress.getLocalHost().getHostName() + "\n");
+                    ctx.writeAndFlush(
+                            "Your session is protected by " +
+                                    ctx.pipeline().get(SslHandler.class).engine().getSession().getCipherSuite() +
+                                    " cipher suite.\n");
+                }
+            );
+        }
     }
 
     @Override
