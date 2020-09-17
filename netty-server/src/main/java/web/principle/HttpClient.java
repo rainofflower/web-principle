@@ -43,7 +43,7 @@ public class HttpClient {
             DefaultHttpRequest request = new DefaultHttpRequest(
                     HttpVersion.HTTP_1_1,
                     HttpMethod.POST,
-                    "https://localhost:8080?term=algrothim");
+                    "/test?term=algorithms");
             ChannelFuture future = f.channel().writeAndFlush(request).sync();
             future.channel().close().sync();
         }finally {

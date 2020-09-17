@@ -20,7 +20,7 @@ public class HttpServer {
 
     static final int BOSS_THREAD = 1;
     static final int WORK_THREAD = 200;
-    static final int PORT = 8080;
+    static final int PORT = 6666;
 
     public static void main(String... args) throws Exception{
         EventLoopGroup bossGroup = new NioEventLoopGroup(BOSS_THREAD);
