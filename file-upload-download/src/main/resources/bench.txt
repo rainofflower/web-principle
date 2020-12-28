@@ -1,0 +1,12 @@
+4.3G文件下载测试  H:/Google%20Chrome/Downloads/CentOS-7-x86_64-DVD-1908.iso
+download2,cost 116768 ms
+download3,cost 156427 ms
+download4,cost 159696 ms
+download2,cost 155442 ms
+download3,cost 160274 ms
+download4,cost 156088 ms
+download2,cost 161430 ms
+download3,cost 88713 ms
+download2,cost 157907 ms
+download4,cost 157645 ms
+download3,cost 155875 ms

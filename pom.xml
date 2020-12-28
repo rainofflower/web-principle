@@ -19,6 +19,7 @@
         <module>original-socket</module>
         <module>common</module>
         <module>netty-server</module>
+        <module>file-upload-download</module>
     </modules>
 	
     <properties>
