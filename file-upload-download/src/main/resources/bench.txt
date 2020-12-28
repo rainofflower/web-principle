@@ -10,3 +10,16 @@ download3,cost 88713 ms
 download2,cost 157907 ms
 download4,cost 157645 ms
 download3,cost 155875 ms
+
+
+9323KB 约9M文件下载测试
+download3,cost 278 ms
+download3,cost 256 ms
+download2,cost 287 ms
+download2,cost 212 ms
+download4,cost 96 ms
+download4,cost 104 ms
+download3,cost 55 ms
+download3,cost 106 ms
+download2,cost 57 ms
+download2,cost 55 ms
