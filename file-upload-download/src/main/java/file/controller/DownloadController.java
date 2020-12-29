@@ -13,6 +13,11 @@ import file.util.FileUtils;
 @RequestMapping("download")
 public class DownloadController {
 
+    @RequestMapping(value = "0", method = {RequestMethod.GET, RequestMethod.POST})
+    public void download0(@RequestParam String file, HttpServletResponse response){
+        FileUtils.downloadFile0(file, response);
+    }
+
     @RequestMapping(value = "1", method = {RequestMethod.GET, RequestMethod.POST})
     public void download1(@RequestParam String file, HttpServletResponse response){
         FileUtils.downloadFile1(new File(file), response);

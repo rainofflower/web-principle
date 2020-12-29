@@ -11,6 +11,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -22,7 +23,33 @@ public class FileUtils {
     private static int BUFFER_SIZE = 1024;
 
     /**
-     * 无法完整下载超过 Integer.MAX_VALUE大小的文件
+     * @param file
+     * @param response
+     */
+    public static void downloadFile0(String file, HttpServletResponse response) {
+        OutputStream os = null;
+        try {
+            // 取得输出流
+            os = response.getOutputStream();
+            long start = System.currentTimeMillis();
+            Path path = Paths.get(file);
+            log.info("download0---file,cost {} ms",System.currentTimeMillis() - start);
+            String contentType = Files.probeContentType(path);
+            response.setHeader("Content-Type", contentType);
+            String fileName1 = URLEncoder.encode(new File(file).getName(), "UTF-8");
+            response.setHeader("Content-Disposition", "attachment;filename*=utf-8'zh_cn'" + fileName1);
+            long start2 = System.currentTimeMillis();
+            Files.copy(path, os);
+            log.info("download0---copy,cost {} ms",System.currentTimeMillis() - start2);
+        } catch (IOException e) {
+            log.error("download0 error",e);
+        }
+        finally {
+            IOUtils.closeQuietly(os);
+        }
+    }
+
+    /**
      * @param file
      * @param response
      */
@@ -32,19 +59,25 @@ public class FileUtils {
         FileChannel fileChannel = null;
         WritableByteChannel writableByteChannel = null;
         try {
-            long start = System.currentTimeMillis();
             // 取得输出流
             os = response.getOutputStream();
             String contentType = Files.probeContentType(Paths.get(file.getAbsolutePath()));
             response.setHeader("Content-Type", contentType);
             String fileName1 = URLEncoder.encode(file.getName(), "UTF-8");
             response.setHeader("Content-Disposition", "attachment;filename*=utf-8'zh_cn'" + fileName1);
-            fileInputStream = new FileInputStream(file);
             writableByteChannel = Channels.newChannel(os);
+            long start = System.currentTimeMillis();
+            fileInputStream = new FileInputStream(file);
             fileChannel = fileInputStream.getChannel();
-            fileChannel.transferTo(0, fileChannel.size(), writableByteChannel);
-            os.flush();
-            log.info("download1,cost {} ms",System.currentTimeMillis() - start);
+            log.info("download1---file,cost {} ms",System.currentTimeMillis() - start);
+            long size = fileChannel.size();
+            long position = 0;
+            long loaded;
+            long start2 = System.currentTimeMillis();
+            while((loaded = fileChannel.transferTo(position, size, writableByteChannel)) > 0){
+                position += loaded;
+            }
+            log.info("download1---copy,cost {} ms",System.currentTimeMillis() - start2);
         } catch (IOException e) {
             log.error("download1 error",e);
         }
@@ -99,15 +132,18 @@ public class FileUtils {
         }
     }
 
+    /**
+     *
+     * @param file
+     * @param response
+     */
     public static void downloadFile3(File file, HttpServletResponse response){
         FileInputStream fileInputStream = null;
         OutputStream outputStream = null;
         FileChannel fileChannel = null;
         WritableByteChannel writableByteChannel = null;
         try {
-            long start = System.currentTimeMillis();
             //拼接文件
-            fileInputStream = new FileInputStream(file);
             long fileLength = file.length();
             //对文件名进行编码，解决中文名乱码
             String fileName1 = URLEncoder.encode(file.getName(), "UTF-8");
@@ -118,10 +154,14 @@ public class FileUtils {
             response.setHeader("Content-Disposition", "attachment;filename*=utf-8'zh_cn'" + fileName1);
             response.setHeader("Content-Length", String.valueOf(fileLength));
             response.setContentType(contentType);
+            long start = System.currentTimeMillis();
+            fileInputStream = new FileInputStream(file);
             fileChannel = fileInputStream.getChannel();
+            log.info("download3---file,cost {} ms",System.currentTimeMillis() - start);
             outputStream = response.getOutputStream();
             writableByteChannel = Channels.newChannel(outputStream);
             ByteBuffer buff = ByteBuffer.allocateDirect(BUFFER_SIZE);
+            long start2 = System.currentTimeMillis();
             while(fileChannel.read(buff) != -1){
                 buff.flip();
                 while(buff.hasRemaining()){
@@ -129,7 +169,7 @@ public class FileUtils {
                 }
                 buff.clear();
             }
-            log.info("download3,cost {} ms",System.currentTimeMillis() - start);
+            log.info("download3---copy,cost {} ms",System.currentTimeMillis() - start2);
         } catch (Exception e) {
             log.error("download3 error",e);
         } finally {
