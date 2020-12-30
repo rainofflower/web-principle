@@ -215,4 +215,204 @@ public class FileUtils {
             IOUtils.closeQuietly(os);
         }
     }
+
+    /**
+     * 文件分片下载  fileChannel
+     * @param range http请求头Range，用于表示请求指定部分的内容。
+     *              格式为：Range: bytes=start-end  [start,end]表示，即是包含请求头的start及end字节的内容
+     * @param response
+     */
+    public static void fileChunkDownload1(File file, String range, HttpServletResponse response) {
+
+        //开始下载位置
+        long startByte = 0;
+
+        long fileEndByte = file.length() - 1;
+
+        //结束下载位置
+        long endByte = fileEndByte;
+
+        //有range的话
+        if (range != null && range.contains("bytes=") && range.contains("-")) {
+            range = range.substring(range.lastIndexOf("=") + 1).trim();
+            String ranges[] = range.split("-");
+            try {
+                //根据range解析下载分片的位置区间
+                if (ranges.length == 1) {
+                    //情况1，如：bytes=-1024  从开始字节到第1024个字节的数据
+                    if (range.startsWith("-")) {
+                        endByte = Long.parseLong(ranges[0]);
+                    }
+                    //情况2，如：bytes=1024-  第1024个字节到最后字节的数据
+                    else if (range.endsWith("-")) {
+                        startByte = Long.parseLong(ranges[0]);
+                    }
+                }
+                //情况3，如：bytes=1024-2048  第1024个字节到2048个字节的数据
+                else if (ranges.length == 2) {
+                    startByte = Long.parseLong(ranges[0]);
+                    endByte = Long.parseLong(ranges[1]);
+                }
+
+            } catch (NumberFormatException e) {
+                startByte = 0;
+                endByte = fileEndByte;
+            }
+        }
+        response.setHeader("Accept-Ranges", "bytes");
+        //Content-Range 表示响应了多少数据，格式为：[要下载的开始位置]-[结束位置]/[文件总大小]
+        response.setHeader("Content-Range", "bytes " + startByte + "-" + endByte + "/" + file.length());
+        if(startByte > fileEndByte || endByte > fileEndByte){
+            //416范围请求有误
+            response.setStatus(response.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+        }else{
+            //要下载的长度
+            long contentLength = endByte - startByte + 1;
+            OutputStream os = null;
+            WritableByteChannel writableByteChannel = null;
+            FileInputStream fileInputStream = null;
+            FileChannel fileChannel = null;
+            try {
+                long start = System.currentTimeMillis();
+                String contentType = Files.probeContentType(Paths.get(file.getAbsolutePath()));
+                response.setHeader("Content-Type", contentType);
+                String fileName1 = URLEncoder.encode(file.getName(), "UTF-8");
+                //Content-Disposition 表示响应内容以何种形式展示，是以内联的形式（即网页或者页面的一部分），还是以附件的形式下载并保存到本地。
+                //inline表示内联的形式，即：浏览器直接下载
+                response.setHeader("Content-Disposition", "inline;filename*=utf-8'zh_cn'" + fileName1);
+
+                //Content-Length 表示资源内容长度，即：文件大小
+                response.setHeader("Content-Length", String.valueOf(contentLength));
+                //206表示返回的body只是原数据的一部分
+                response.setStatus(response.SC_PARTIAL_CONTENT);
+
+                os = response.getOutputStream();
+                writableByteChannel = Channels.newChannel(os);
+                fileInputStream = new FileInputStream(file);
+                fileChannel = fileInputStream.getChannel();
+                long position = startByte;
+                //已传送数据大小
+                long transmitted = 0;
+                long loaded;
+                while((loaded = fileChannel.transferTo(position, contentLength - transmitted, writableByteChannel)) > 0){
+                    position += loaded;
+                    transmitted += loaded;
+                }
+                log.info("fileChunkDownload1---copy,cost {} ms",System.currentTimeMillis() - start);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                IOUtils.closeQuietly(fileInputStream);
+                IOUtils.closeQuietly(writableByteChannel);
+                IOUtils.closeQuietly(fileChannel);
+                IOUtils.closeQuietly(os);
+            }
+        }
+    }
+
+    /**
+     * 文件分片下载 RandomAccessFile
+     * @param range http请求头Range，用于表示请求指定部分的内容。
+     *              格式为：Range: bytes=start-end  [start,end]表示，即是包含请求头的start及end字节的内容
+     * @param response
+     */
+    public static void fileChunkDownload2(File file, String range, HttpServletResponse response) {
+
+        //开始下载位置
+        long startByte = 0;
+
+        long fileEndByte = file.length() - 1;
+
+        //结束下载位置
+        long endByte = fileEndByte;
+
+        //有range的话
+        if (range != null && range.contains("bytes=") && range.contains("-")) {
+            range = range.substring(range.lastIndexOf("=") + 1).trim();
+            String ranges[] = range.split("-");
+            try {
+                //根据range解析下载分片的位置区间
+                if (ranges.length == 1) {
+                    //情况1，如：bytes=-1024  从开始字节到第1024个字节的数据
+                    if (range.startsWith("-")) {
+                        endByte = Long.parseLong(ranges[0]);
+                    }
+                    //情况2，如：bytes=1024-  第1024个字节到最后字节的数据
+                    else if (range.endsWith("-")) {
+                        startByte = Long.parseLong(ranges[0]);
+                    }
+                }
+                //情况3，如：bytes=1024-2048  第1024个字节到2048个字节的数据
+                else if (ranges.length == 2) {
+                    startByte = Long.parseLong(ranges[0]);
+                    endByte = Long.parseLong(ranges[1]);
+                }
+
+            } catch (NumberFormatException e) {
+                startByte = 0;
+                endByte = fileEndByte;
+            }
+        }
+        response.setHeader("Accept-Ranges", "bytes");
+        //Content-Range 表示响应了多少数据，格式为：[要下载的开始位置]-[结束位置]/[文件总大小]
+        response.setHeader("Content-Range", "bytes " + startByte + "-" + endByte + "/" + file.length());
+        if(startByte > fileEndByte || endByte > fileEndByte){
+            //416范围请求有误
+            response.setStatus(response.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+        }else{
+            //要下载的长度
+            long contentLength = endByte - startByte + 1;
+            BufferedOutputStream outputStream = null;
+            RandomAccessFile randomAccessFile = null;
+            OutputStream os = null;
+            try {
+                long start = System.currentTimeMillis();
+                String contentType = Files.probeContentType(Paths.get(file.getAbsolutePath()));
+                response.setHeader("Content-Type", contentType);
+                String fileName1 = URLEncoder.encode(file.getName(), "UTF-8");
+                //Content-Disposition 表示响应内容以何种形式展示，是以内联的形式（即网页或者页面的一部分），还是以附件的形式下载并保存到本地。
+                //inline表示内联的形式，即：浏览器直接下载
+                response.setHeader("Content-Disposition", "inline;filename*=utf-8'zh_cn'" + fileName1);
+
+                //Content-Length 表示资源内容长度，即：文件大小
+                response.setHeader("Content-Length", String.valueOf(contentLength));
+                //206表示返回的body只是原数据的一部分
+                response.setStatus(response.SC_PARTIAL_CONTENT);
+
+                //已传送数据大小
+                long transmitted = 0;
+
+                os = response.getOutputStream();
+                randomAccessFile = new RandomAccessFile(file, "r");
+                outputStream = new BufferedOutputStream(os);
+                byte[] buff = new byte[2048];
+                int len = 0;
+                randomAccessFile.seek(startByte);
+                //判断是否到了最后不足2048（buff的length）个byte
+                while ((transmitted + len) <= contentLength && (len = randomAccessFile.read(buff)) != -1) {
+                    outputStream.write(buff, 0, len);
+                    transmitted += len;
+                }
+                //处理不足buff.length部分
+                if (transmitted < contentLength) {
+                    len = randomAccessFile.read(buff, 0, (int) (contentLength - transmitted));
+                    outputStream.write(buff, 0, len);
+                }
+
+                outputStream.flush();
+                response.flushBuffer();
+                log.info("fileChunkDownload2---copy,cost {} ms",System.currentTimeMillis() - start);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (randomAccessFile != null) {
+                        randomAccessFile.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }
